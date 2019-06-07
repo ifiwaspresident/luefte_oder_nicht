@@ -32,7 +32,7 @@ def hum_temp_messung():
 
     # Example using a Beaglebone Black with DHT sensor
     # connected to pin P8_11.
-    pin = '4'
+    pin = '5'
 
     # Example using a Raspberry Pi with DHT sensor
     # connected to GPIO23.
@@ -61,10 +61,10 @@ def loop():
         humidity, temperature= hum_temp_messung()
         fText='Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(temperature, humidity)
         with open("Messwerte/log_file_"+datum+".txt","a+") as logfile:
-                            text = (str(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())) +": "+ fText+  "\n")
+                            text = (str(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())) +" ; "+ str(temperature)+" ; "+str( humidity) +"\n")
                             logfile.write(text)
                             logfile.close()
-        time.sleep(10)
+        time.sleep(30)
 
 
 def get_absolute_hum_sat(temp):
@@ -85,20 +85,21 @@ def jetzt_lueften():
     feuchtigkeit_innen = get_absolute_hum_sat(temp) * hum * 0.01
     
     # Messwerte von der Wetterstation abrufen
-    temperatur,taupunkt_temp,rel_luftfeuchte,luft_druck,boeen = gwm.get_wetterstation_data()
+    temperatur,temperatur_gefuehlt,taupunkt_temp,rel_luftfeuchte,luft_druck,boeen = gwm.get_wetterstation_data()
     # Aussen Feuchtigkeit berechnen
     feuchtigkeit_aussen= get_absolute_hum_sat(temperatur[1]) * rel_luftfeuchte[1] * 0.01
     
     delta = feuchtigkeit_innen - feuchtigkeit_aussen 
-    print(("Partialdruck Wasserdampf draußen: {delta} Pa").format(delta= str(int(feuchtigkeit_aussen))))
     print(("Partialdruck Wasserdampf drinnen: {delta} Pa").format(delta= str(int(feuchtigkeit_innen))))
+    print(("Außentemperatur: {tempA} *C, Feuchtigkeit {humA} %").format(tempA = temperatur[1],humA =rel_luftfeuchte[1] ))
+    print(("Partialdruck Wasserdampf draussen: {delta} Pa").format(delta= str(int(feuchtigkeit_aussen))))
     if delta >100:
-        return(("\nDie Luft draußen ist trockener, Lüfte! \nDas Delta beträgt {delta} Pa").format(delta= str(int(delta))))
+        return(('\nDie Luft draußen ist trockener, Lüfte! \nDas Delta beträgt {delta} Pa').format(delta= str(int(delta))))
     
     elif delta >0:
-        return(("\nDie Luft draußen ist ähnlich feucht wie drin. Lüfte, wenn du frische Luft brauchst.\nDas Delta beträgt {delta} Pa").format(delta= str(int(delta))))
+        return(('\nDie Luft draußen ist ähnlich feucht wie drinnen. Lüfte, wenn du frische Luft brauchst.\nDas Delta beträgt {delta} Pa').format(delta= str(int(delta))))
         
-    else: return(("\nDie Luft draußen ist feuchter als drin vermeide das Lüften.\nDas Delta beträgt {delta} Pa").format(delta= str(int(delta))))
+    else: return(('\nDie Luft draußen ist feuchter als drinnen. Vermeide das Lüften.\nDas Delta beträgt {delta} Pa').format(delta= str(int(delta))))
         
     
 #print(jetzt_lueften())
